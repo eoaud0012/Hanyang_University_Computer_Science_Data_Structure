@@ -15,7 +15,7 @@ int IsFull(Stack *S);
 int IsEmpty(Stack *S);
 void PrintStack(Stack *S);
 int Pop(Stack *S);
-int Postfix(Stack *S, char input_str);
+int Postfix(Stack *S, char input_char);
 void DeleteSTack(Stack *S);
 
 
@@ -43,54 +43,64 @@ Stack* CreateStack(int max) {
 }
 void Push(Stack *S, int X) {
 	if(IsFull(S)) {
-		fprintf(stderr, "Stack is Full");
+		fprintf(stderr, "Stack is Full\n");
                 exit(1);
 	}
 	else	{
 		S->key[++S->top] = X;
-		printf("%d inserted \n", S->key[S->top]-'0');
+		printf("%3d", S->key[S->top]);
 	} 
+}
+int Top(Stack *S) {
+	return S->top;
 }
 int Pop(Stack *S) {
 	if(IsEmpty(S)) {
 		fprintf(stderr, "Stack is Empty");
 		exit(1);
 	}
-	else 	S->key[S->top--];
-	return S->key[S->top];
+	return S->key[S->top--];
 }
 void DeleteStack(Stack *S) {
-	if(IsEmpty(S)) {
-                fprintf(stderr, "Stack is Empty");
-                exit(1);
-        }
-	else {
-		while(!IsEmpty(S)) {
-			Pop(S);
-		}
-	}
+	free(S->key);
+	free(S);
 }
-int Postfix(Stack* S, char input_str) {
+int Postfix(Stack* S, char input_char) {
 	int a, b;
 	int result;
 	switch(input_char) {
 		case '+':
-
+			b = Pop(S);
+			a = Pop(S);
+			result = a+b;
+			Push(S, result);	
 			break;
 		case '-':
-
+			b = Pop(S);
+			a = Pop(S);
+			result = a-b;
+			Push(S, result);	
 			break;
 		case '*':
-
+			b = Pop(S);
+			a = Pop(S); 
+			result = a*b;
+			Push(S, result);
 			break;
 		case '/':
-
+			b = Pop(S);
+			a = Pop(S);
+			result = a/b;
+			Push(S, result);
 			break;
 		case '%':
-
+			b = Pop(S);
+			a = Pop(S);
+			result = a%b;
+			Push(S, result);
 			break;
 		default:
-
+			Push(S, input_char-'0'); 
 			break;
 	}
 	return result;
@@ -106,11 +116,14 @@ void main(int argc, char* argv[]) {
 	max = 10;
 	stack = CreateStack(max);
 	//p4_1 main code
-
+	
+	printf("Top numbers :");
 	for(i=0; i<strlen(input_str)&&input_str[i]!='#';i++)
 	{
-		Push(stack, input_str[i]);
+		result = Postfix(stack, input_str[i]);
 	}
+	printf("\n");
+	printf("Evaluation result : %d\n", result); 
 	fclose(fi);
 	DeleteStack(stack);
 
