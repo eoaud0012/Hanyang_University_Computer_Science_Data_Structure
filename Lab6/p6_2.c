@@ -8,6 +8,8 @@ struct BinarySearchTree
 	Tree left;
 	Tree right;
 };
+int count1 = 0;
+int count2 = 0;
 Tree findNode(Tree root, int key) {
 	if(root == NULL) {
 		printf("%d is not in the tree\n", key);
@@ -57,11 +59,50 @@ void printInorder(Tree root) {
 void deleteTree(Tree root) {
 	free(root);
 }		
+Tree getMaxValueInTree(Tree parentNode, Tree root) {
+	if(root == NULL)
+		return parentNode;
+	else { 
+		while(root->right != NULL)
+			root = root->right;	
+		
+return root;	
+}
+Tree deleteNode(Tree root, int key) {
+	Tree max, tmp;
+	// boundary
+	if(root == NULL)
+		printf("Deletion Error : %d does not exist in the tree\n", key);
+	
+	// recursive
+	else if(root->value > key) 
+			root->left = deleteNode(root->left, key);
+	else if(root->value < key)
+			root->right = deleteNode(root->right, key);
+	else if(root->value == key && root->left != NULL && root->right != NULL) {
+	count1++;	
+	printf("Delete %d\n", key);
+	max = getMaxValueInTree(root, root->left);
+	root->value = max->value;
+	root->left = deleteNode(root->left, root->value);
+}
+	else if(root->value == key && (root->left == NULL || root->right == NULL)) {
+		count2++;
+		if(count1 != count2)
+			printf("Delete %d\n", key);
+		tmp = root;
+		if(root->left == NULL)
+			root = root->right;
+	else if(root->right == NULL)
+			root = root->left;
+		free(tmp);
+		tmp = NULL;
+}
 
-
-Tree deleteNode(Tee root, int key);
-Tree getMaxValueInTree(Tree parentNode, Tree root);
-
+count1 = 0;
+count2 = 0;			
+return root;
+}
 void main(int argc, char * argv[])
 {
 	FILE *fi = fopen(argv[1], "r");
@@ -96,3 +137,4 @@ void main(int argc, char * argv[])
 	}
 deleteTree(root);
 }
+

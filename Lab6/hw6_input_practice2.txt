@@ -1,0 +1,37 @@
+i 27 
+i 9
+i 30
+i 13
+i 3
+i 5
+i 12
+i 25
+i 28
+i 29
+i 40
+i 2
+i 1
+i 4
+pi
+d 13
+pi
+d 9
+pi
+d 30
+pi
+d 3
+pi
+d 20
+pi
+d 1
+pi
+d 29
+pi
+d 25
+pi
+d 12
+pi
+d 2
+pi
+d 27
+pi
