@@ -24,6 +24,7 @@ Otherwise, return 0.*/
 		if(value == heap->Element[i]) 
 			return 1;
 	}
+return 0;
 }
 void Insert(Heap *heap, int value) {
 /* You should find the right position for
@@ -33,10 +34,10 @@ already exists in the heap, print an error message.*/
 int i;
 	if(heap->Size == heap->Capacity)
 		printf("Insertion Error : Max Heap is full.\n");
-	if(Find(heap, value) == 1)
+	if(Find(heap, value) == 1) {
 		printf("%d is already in the tree\n", value);
-	if(heap->Size == 0)
-		heap->Element[++heap->Size] = value;
+		return;
+	}
 	if(heap->Size < heap->Capacity) {
 		for(i = ++heap->Size; heap->Element[i/2] < value; i /= 2) {
 			heap->Element[i] = heap->Element[i/2];
