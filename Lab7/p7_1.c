@@ -41,11 +41,11 @@ int i;
 	if(heap->Size < heap->Capacity) {
 		for(i = ++heap->Size; heap->Element[i/2] < value; i /= 2) {
 			heap->Element[i] = heap->Element[i/2];
-			if(i == 0) break;
+			if(i == 0) { heap->Element[1] = value; break; }
 		}
 		heap->Element[i] = value;
 		printf("insert %d\n", heap->Element[i]);
-		}
+	}
 }
 
 //int DeleteMax(Heap *heap) {
