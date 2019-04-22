@@ -69,6 +69,7 @@ error message.*/
 		else break; 
 	} 
 	heap->Element[i] = last;
+	printf("Max Element: %d deleted\n", max);
 return max;		
 }
 void PrintHeap(Heap *heap) {
