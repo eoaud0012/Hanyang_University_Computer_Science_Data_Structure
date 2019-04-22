@@ -35,7 +35,7 @@ int i;
 	if(heap->Size == heap->Capacity)
 		printf("Insertion Error : Max Heap is full.\n");
 	if(Find(heap, value) == 1) {
-		printf("%d is already in the tree\n", value);
+		printf("%d is already in the heap\n", value);
 		return;
 	}
 	if(heap->Size < heap->Capacity) {
@@ -85,9 +85,9 @@ void main(int argc, char* argv[])
 			case 'f' :
 					fscanf(fi, "%d", &key);
 					if(Find(maxHeap, key))
-						printf("%d is in the tree.\n", key);
+						printf("%d is in the heap.\n", key);
 					else
-						printf("%d is not in the tree.\n", key);
+						printf("%d is not in the heap.\n", key);
 					break;
 			}
 }
