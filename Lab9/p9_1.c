@@ -1,15 +1,25 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include<wait.h>
-
 
 typedef struct _Queue* Queue;
 typedef struct _Graph* Graph;
 
+//Lab
 void InsertEdge(Graph G, int a, int b);
 Graph CreateGraph(int* nodes, int i);
 void DeleteGraph(Graph G);
+void PrintGraph(Graph G);
+
+//HW
+void Topsort(Graph G);
+Queue MakeNewQueue(int X);
+int IsEmpty(Queue Q);
+int IsFull(Queue Q);
+int Dequeue(Queue Q);
+void Enqueue(Queue Q, int X);
+void DeleteQueue(Queue Q);
+void MakeEmpty(Queue Q);
 
 struct _Queue
 {
@@ -23,95 +33,94 @@ struct _Queue
 struct _Graph
 {
    int size;
-   int *node;
+   int* node;
    int** matrix;
 };
 
 
-Graph CreateGraph(int* nodes, int max){
-   max= max+1;
-   Graph g = (Graph )malloc(sizeof(Graph));
-   g->size = max;
-   g->matrix = (int **)malloc(sizeof(int*)*max);
+Graph CreateGraph(int* nodes, int length){
+	int i, j;
+	Graph G;
 
-   for( int i = 0; i<max;i++)
-   {
-      g->matrix[i] = (int *)malloc(sizeof(int)*max);
-      memset(g->matrix[i] , 0 , sizeof(int)*max);
-   }
-   for( int k = 1 ; k< max; k++)
-   {
-      g->matrix[0][k] = nodes[k-1];
-      g->matrix[k][0] = nodes[k-1];
-   }
-   return g;
+	G = (Graph)malloc(sizeof(struct _Graph));
+	G->size = length;
+	G->node = (int*)malloc(sizeof(int)*G->size);
+	G->node = nodes;
+	G->matrix = (int**)malloc(sizeof(int*)*G->size);
+	for(i = 0; i < G->size; i++)
+		G->matrix[i] = (int*)malloc(sizeof(int)*G->size);
+	
+	for(i = 0; i < G->size; i++)
+		for(j = 0; j < G->size; j++)
+			G->matrix[i][j] = 0;
+return G;
 }
 
 void InsertEdge(Graph G, int a, int b){
-   int q=0;
-   int w=0;
+	int i, j;
+	
+	for(i = 0; i < G->size; i++) 
+		if(a == G->node[i])
+			break;
 
-   for(q=0;q<G->size;q++)
-   {
-      if(a == G->matrix[0][q])
-         break;
-   }
-   for(w=0; w<G->size; w++)
-   {
-      if(b == G->matrix[w][0])
-         break;
-   }
-   G->matrix[q][w]++;
+	for(j = 0; j < G->size; j++)
+		if(b == G->node[j])
+			break;
 
-
-
+	G->matrix[i][j] = 1;
 }
 
-//void DeleteGraph(Graph G){
-//
-//
-//}
+void DeleteGraph(Graph G){
+	int i;
 
+	for(i = 0; i < G->size; i++)
+		free(G->matrix[i]);
+	free(G->node);
+	free(G);
+}
+
+void PrintGraph(Graph G) {
+	int i, j;
+
+	printf("  ");
+	for(i = 0; i < G->size; i++)
+		printf("%d ", G->node[i]);
+	printf("\n");
+	
+	for(i = 0; i < G->size; i++) {
+		printf("%d ", G->node[i]);
+		for(j = 0; j < G->size; j++)
+			printf("%d ", G->matrix[i][j]);
+		printf("\n");
+	}
+	printf("\n");	
+}
 int main(int argc, char **argv){
-   FILE *fp = fopen(argv[1],"r");
-   int Node_Of_Numbers[10000];
-   int Temp;
-   Graph G;
-   int i = 0;
-   int a, Minus, b;
-   
-   while(i<10)
-   {   
-      fscanf(fp, "%d", &Temp);
-      Node_Of_Numbers[i] = Temp;
-      i++;   
-      fscanf(fp, "%c", &Temp);
-      if(Temp == 10)
-         break;
-   }
+	int i = 0;
+ 	int* int_node;
+	char input_node[100];
+	char* token;
+	Graph G = (Graph)malloc(sizeof(struct _Graph));
+	FILE *fi = fopen(argv[1], "r");
+	fgets(input_node, 100, fi);
+	int_node = (int*)malloc(sizeof(int)*strlen(input_node));
+	token = strtok(input_node, " ");
+	while(token != NULL) {
+		int_node[i++] = atoi(token);
+		token = strtok(NULL, " ");
+	}
+	G = CreateGraph(int_node, i);
 
-   G=CreateGraph(Node_Of_Numbers,i);
-   while(!feof(fp))
-   {
-      fscanf(fp, "%d", &a);
-      fscanf(fp, "%c", &Minus);
-      fscanf(fp, "%d ",&b);
-      InsertEdge(G,a,b);   
-   }
-   for(int j = 0; j<i+1; j++)
-   {
-      for(int z = 0; z<i+1; z++)
-         {
-            if(j==0 && z==0)
-               printf("  ");
-            else
-               printf( "%d ", G->matrix[j][z]);
-         }
-      printf("\n");
-   }
-   
-
-
-   return 0;
-
+	while(!feof(fi)) {
+		fscanf(fi, "%s", input_node);
+		token = strtok(input_node, "-");
+		if(token == NULL) break;
+		int a = atoi(token);
+		token = strtok(NULL, " ");
+		if(token == NULL) break;
+		int b = atoi(token);
+		InsertEdge(G, a, b);
+	}
+	PrintGraph(G);
+return 0;
 }
