@@ -168,8 +168,9 @@ return int_indegree_copy;
 }
 
 void Topsort(Graph GG, Queue QQ) {
-	int i, j, k = 0;
+	int i, j, k, x = 0;
 	int vertex;
+	int temp = 0;
 	int* int_indegree;
 	Queue Q;
 	Graph G;
@@ -178,12 +179,22 @@ void Topsort(Graph GG, Queue QQ) {
 	G = GG;
 	Q = QQ;
 	int_indegree = checkIndegree(G);
-	
+	for(i = 0; i < G->size; i++)
+		Q->key[i] = 99999;
+
 	for(i = 0; i < G->size; i++) { 
 		if(int_indegree[i] == 0) {
 			Enqueue(Q, G->node[i]);
 			G->visited[i] = TRUE;
-		}			
+		}
+	}
+	
+	for(i = 1; i < G->size; i++) {
+		temp = Q->key[i];
+		for(j = i-1; j >= 0 && Q->key[j] > temp; j--) {
+			Q->key[j+1] = Q->key[j];
+		}
+		Q->key[j+1] = temp;
 	}
 	
 	while(!IsEmpty(Q)) {
@@ -203,17 +214,28 @@ void Topsort(Graph GG, Queue QQ) {
 
 		int_indegree = checkIndegree(G);
 
+		x = Q->qsize;
+		
 		for(k = 0; k < G->size; k++) {
-			if(G->visited[k] != TRUE && int_indegree[k] == 0) {
+			if(int_indegree[k] == 0) {
+				if(G->visited[k] != TRUE) {
 				Enqueue(Q, G->node[k]);
 				G->visited[k] = TRUE;
+				}
 			}
 		}
+
+		for(i = x+1; i < Q->qsize; i++) {
+			temp = Q->key[i];
+				for(j = i-1; j >= x && Q->key[j] > temp; j--) {
+					Q->key[j+1] = Q->key[j];
+				}
+			Q->key[j+1] = temp;
 		}
 	
+}	
 		printf("\n");
-	}
-
+}
 int main(int argc, char **argv){
 	int i, j = 0;
  	int* int_node;
