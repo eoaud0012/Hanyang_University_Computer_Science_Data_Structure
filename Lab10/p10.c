@@ -11,6 +11,8 @@ typedef struct Node {
 	int vertex; // key gap
 	int dist; // distance(weight)
 	int prev;
+	int next;
+	int visited;
 } Node;
 
 typedef struct Graph {
@@ -45,8 +47,10 @@ int getAdjacent(Graph G, int vertexNum) {
 	int i = 0;
 	int j = 0;
 	for(i = 1; i < G.size; i++) 
-		if(G.vertices[vertexNum][i] != 0) 
+		if(G.vertices[vertexNum][i] != 0 && G.nodes[i].visited == FALSE) { 
+			G.nodes[i].visited = TRUE;		
 			return G.nodes[i].vertex;
+		}
 
 }
 
@@ -68,70 +72,71 @@ Graph CreateGraph(int size) {
 		G.nodes[i].vertex = i;
 		G.nodes[i].dist = sentinel;
 		G.nodes[i].prev = 0;
+		G.nodes[i].visited = FALSE;
 	}
 return G;
 }
 
-Heap* createMinHeap(int heapSize) {
+Heap* createMinHeap(Graph G, int heapSize) {
 	int i = 0;
 	Heap* H;
 	H = (Heap*)malloc(sizeof(Heap));
 	H->Capacity = heapSize;
-	H->Size = 0;
+	H->Size = 1;
 	H->Element = (Node*)malloc(sizeof(Node)*(H->Capacity));
-	for(i = 1; i < heapSize; i++) {
-		H->Element[i].vertex = i;
-		H->Element[i].dist = sentinel;
-		H->Element[i].prev = 0;	
-	}
+
+	for(i = 1; i < H->Capacity; i++)
+		H->Element[i] = G.nodes[i];	
+
 return H;
 }
 
-void insertToMinHeap(Heap* minHeap, int vertex, int distance) {
+void insertToMinHeap(Heap* minHeap, Node node) {
 	int i = 0;
 	if(IsFull(minHeap)) {
 		printf("Min Heap is Full!");
 		return;
 	}	
 
-	for(i = ++minHeap->Size; minHeap->Element[i/2].dist > distance; i /= 2)
+	for(i = ++minHeap->Size; i >= 2 && minHeap->Element[i/2].dist > node.dist; i /= 2)
 		minHeap->Element[i] = minHeap->Element[i/2];
 
-	minHeap->Element[i].vertex = vertex;
-	minHeap->Element[i].dist = distance;	
+	minHeap->Element[i] = node;
+
 }
 
 Node deleteMin(Heap* minHeap) {
 	int i = 0;
 	int Child = 0;
-	int MinElement = 0;
-	int LastElement = 0;
+	Node MinNode;
+	Node LastNode;
 
-	MinElement = minHeap->Element[1].dist;
-	LastElement = minHeap->Element[minHeap->Size--].dist;
+	MinNode = minHeap->Element[1];
+	LastNode = minHeap->Element[minHeap->Size--];
 	
 	for(i = 1; i*2 <= minHeap->Size; i = Child) {
 		Child = i * 2;
 		if(Child != minHeap->Size && minHeap->Element[Child+1].dist < minHeap->Element[Child].dist)
 			Child++;
-		if(LastElement > minHeap->Element[Child].dist)
+		if(LastNode.dist > minHeap->Element[Child].dist)
 			minHeap->Element[i] = minHeap->Element[Child];
 		else break;
 	}
 	
-	minHeap->Element[i].dist = LastElement;
-	return minHeap->Element[1];
+	minHeap->Element[i] = LastNode;
+	return MinNode;
 }
+/*
 void PercDown(Heap* minHeap, int i, int N) {
 	int Child;
-	int Tmp;
+	Node Tmp;
 
-	for(Tmp = minHeap->Element[i].dist; LeftChild(i) < N; i = Child) {
+	for(Tmp = minHeap->Element[i]; LeftChild(i) < N; i = Child) {
 		Child = LeftChild(i);
-		if(Child != N-1 && minHeap->Element[Child+1].dist > minHeap->Element[Child].dist)
-		Child++;
+		if(Child != N-1 && minHeap->Element[Child+1].dist < minHeap->Element[Child].dist)
+			Child++;
 
-		if(Tmp < minHeap->Element[i].dist)
+		if(Tmp.dist > minHeap->Element[Child].dist)
 			minHeap->Element[i] = minHeap->Element[Child];
 		else break;
 	}
@@ -140,49 +145,85 @@ void buildHeap(Heap* minHeap, int N) {
 	int i;
 	for(i = N/2; i > 0; i--)
 		PercDown(minHeap, i, N);	
+}
+*/
+void Print(Graph G, int adjacentIndex) {
+	printf("%d->", G.nodes[adjacentIndex].prev);
+	adjacentIndex = G.nodes[adjacentIndex].prev;
+	Print(G, adjacentIndex);
 } 
 void printShortestPath(Graph G) {
 	int i = 0;
 	int j = 0;
 	int adjacentIndex = 0;
-	G.nodes[1].dist = 0;
-	G.nodes[1].prev = 0;
+	int index = 0;
+	int approved_count = 1;
+	int count = 0;
+	int list_size = G.size;
+	int print_list[G.size];
 	Node tmp;
+
 //	createMinHeap
 	Heap* H;
-	H = createMinHeap(G.size);
-//	insertToMinHeap
-	for(i = 1; i < G.size; i++)	
-		insertToMinHeap(H, G.nodes[i].vertex, G.vertices[i][j]);
+	H = createMinHeap(G, G.size);
 
+// initialize
+	// Graph
+	G.nodes[1].dist = 0;
+	G.nodes[1].prev = 0;
+	// visit
+	G.nodes[1].visited = TRUE;
 // set ShortedstPath
 	adjacentIndex = getAdjacent(G, G.nodes[1].vertex);
+
+
 	G.nodes[adjacentIndex].dist = G.vertices[1][adjacentIndex];
 	G.nodes[adjacentIndex].prev = G.nodes[1].vertex;
 	
-	printf("%d->%d ", G.nodes[adjacentIndex].prev, G.nodes[adjacentIndex].vertex);
-	printf("(cost: %d)\n", G.nodes[adjacentIndex].dist);
+	G.nodes[1].next = adjacentIndex;
+	approved_count++;
+//	insertToMinHeap
+	insertToMinHeap(H, G.nodes[adjacentIndex]);
 
-	while(!IsEmpty(H)) {
+	for(j = 1;;j = G.nodes[j].next) {
+		printf("%d", G.nodes[j].vertex);
+		count++;
+		if(count == approved_count) break;
+		else printf("->");
+	}
+	printf(" cost : (%d)\n", G.nodes[adjacentIndex].dist);
+
+/*
+	1->2 (cost : 3)
+	1->2->3 (cost : 5)
+*/
+	while(H->Size > 1) {
 		tmp = deleteMin(H);
-		adjacentIndex = getAdjacent(G, tmp.vertex);
-		if(tmp.dist + G.vertices[tmp.vertex][adjacentIndex] < G.nodes[adjacentIndex].dist) {
-			G.nodes[adjacentIndex].dist = tmp.dist + G.vertices[tmp.vertex][adjacentIndex];
-			G.nodes[adjacentIndex].prev = tmp.vertex;
+		for(i = 0; i < H->Capacity; i++) {	
+			if(G.vertices[tmp.vertex][i] != 0 && G.nodes[i].visited == FALSE) {
+				adjacentIndex = getAdjacent(G, tmp.vertex);
+				if(tmp.dist + G.vertices[tmp.vertex][adjacentIndex] < G.nodes[adjacentIndex].dist) {
+					G.nodes[adjacentIndex].dist = tmp.dist + G.vertices[tmp.vertex][adjacentIndex];
+					G.nodes[adjacentIndex].prev = tmp.vertex;
+					G.nodes[tmp.vertex].next = adjacentIndex;
+					approved_count++;
+					insertToMinHeap(H, G.nodes[adjacentIndex]);
 
-	printf("%d->%d ", G.nodes[adjacentIndex].prev, G.nodes[adjacentIndex].vertex);
-	printf("(cost: %d)\n", G.nodes[adjacentIndex].dist);
-
-
-
-			buildHeap(H, H->Size);
-		} 
-	}	
-
-
-// print
-//	G.nodes[1]->G.
-}
+//					buildHeap(H, H->Size);
+					} 					
+				}
+			}
+		}
+		
+	count = 0;		
+	for(j = 1;;j = G.nodes[j].next) {
+		printf("%d", G.nodes[j].vertex);
+		count++;
+		if(count == approved_count) break;
+		else printf("->");
+	}
+	printf(" cost : (%d)\n", G.nodes[adjacentIndex].dist);
+} 
 
 void main(int argc, char* argv[]) {
 	FILE *fi = fopen(argv[1], "r");
