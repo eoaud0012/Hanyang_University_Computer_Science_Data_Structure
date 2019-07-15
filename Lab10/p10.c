@@ -43,23 +43,14 @@ int IsEmpty(Heap* H) {
 	return H->Size == 0 ? TRUE : FALSE;
 }
 
-int getAdjacent(Graph G, int vertexNum) {
+int getAdjacent(Graph G, int vertexNum, int startNum) {
 	int i = 0;
 	int j = 0;
-	for(i = 1; i < G.size; i++) { 
-		if(G.vertices[vertexNum][i] != 0 && G.nodes[i].visited == FALSE) { 
-			G.nodes[i].visited = TRUE;
+	for(i = startNum; i < G.size; i++) {
+		if(G.vertices[vertexNum][i] != 0 && G.nodes[i].visited == FALSE) 
 			return G.nodes[i].vertex;
-		}
-	}	
+	}
 }
-
-void makeClean(Graph G, int vertexNum) {
-	int i = 0;
-	for(i = 1; i < G.size; i++)
-		G.nodes[i].visited = TRUE;
-return;
-} 
 
 Graph CreateGraph(int size) {
 	int i = 0;
@@ -84,7 +75,7 @@ Graph CreateGraph(int size) {
 return G;
 }
 
-Heap* createMinHeap(Graph G, int heapSize) {
+Heap* createMinHeap(int heapSize) {
 	int i = 0;
 	Heap* H;
 	H = (Heap*)malloc(sizeof(Heap));
@@ -110,6 +101,13 @@ void insertToMinHeap(Heap* minHeap, Node node) {
 		return;
 	}
 
+	for(i = 0; i < minHeap->Size; i++) {
+		if(minHeap->Element[i].vertex == node.vertex) {
+			minHeap->Element[i] = node;
+			return;
+		}
+	}
+
 	for(i = ++minHeap->Size; i >= 2 && minHeap->Element[i/2].dist > node.dist; i /= 2)
 		minHeap->Element[i] = minHeap->Element[i/2];
 
@@ -125,7 +123,7 @@ Node deleteMin(Heap* minHeap) {
 
 	MinNode = minHeap->Element[1];
 	LastNode = minHeap->Element[minHeap->Size--];
-	
+
 	for(i = 1; i*2 <= minHeap->Size; i = Child) {
 		Child = i * 2;
 		if(Child != minHeap->Size && minHeap->Element[Child+1].dist < minHeap->Element[Child].dist)
@@ -160,20 +158,46 @@ void buildHeap(Heap* minHeap, int N) {
 }
 */
 
+void printResultPath(Graph G, int target) {
+	int arr[G.size];
+	int size = 0;
+	int dist = G.nodes[target].dist;
+	arr[++size] = target;	
+
+	if(dist == sentinel) {
+		printf("cannot reach to node %d\n", target);
+		return;
+	}
+
+	while(TRUE) {
+
+		if(G.nodes[target].prev != 0) {
+			target = G.nodes[target].prev;
+			arr[++size] = target;
+		}	
+		else break;
+	}
+
+	while(TRUE) {	
+		printf("%d", arr[size--]);
+		if(size == 0) {
+			printf(" cost : (%d)\n", dist);
+			return;
+		}
+		else printf("->");
+	}
+}
+
 void printShortestPath(Graph G) {
 	int i = 0;
 	int j = 0;
 	int adjacentIndex = 0;
-	int index = 0;
-	int actual_count = 1;
-	int count = 0;
-	int list_size = G.size;
-	int print_list[G.size];
+	int count = 2;
 	Node tmp;
 
 //	createMinHeap
 	Heap* H;
-	H = createMinHeap(G, G.size);
+	H = createMinHeap(G.size);
 
 // initialize
 	// Graph
@@ -192,15 +216,18 @@ void printShortestPath(Graph G) {
 	
 	while(H->Size > 0) {
 		tmp = deleteMin(H);
-		for(i = 1; i < G.size; i++) {
-			adjacentIndex = getAdjacent(G, tmp.vertex);		
+		G.nodes[tmp.vertex].visited = TRUE;
+		for(i = 2; i < G.size; i++) {
+			adjacentIndex = getAdjacent(G, tmp.vertex, i);		
 			if(G.nodes[adjacentIndex].dist > tmp.dist + G.vertices[tmp.vertex][adjacentIndex]) {
 				G.nodes[adjacentIndex].dist = tmp.dist + G.vertices[tmp.vertex][adjacentIndex];
-				insertToMinHeap(H, G.nodes[adjacentIndex];			
-			}	
+				G.nodes[adjacentIndex].prev = tmp.vertex;
+				insertToMinHeap(H, G.nodes[adjacentIndex]);			
+			}
 		}
-		makeClean(G, tmp.vertex);
 	}
+	for(j = count; j < G.size; j++)
+		printResultPath(G, j);
 }
 	
 void main(int argc, char* argv[]) {
