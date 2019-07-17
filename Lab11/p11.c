@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-
+#define TRUE 1
+#define FALSE 0
 typedef struct _DisjointSet {
 	int size_maze;
 	int *ptr_arr;
@@ -11,16 +12,16 @@ typedef struct _DisjointSet {
 void init(DisjointSets *sets, DisjointSets *maze_print, int num) {
 	int i = 0;
 
-	sets->size_maze = num*num;
-	maze_print->size_maze = num*num;
+	sets->size_maze = num*num+1;
+	maze_print->size_maze = 2*num*num+1;
 
 	sets->ptr_arr = (int*)malloc(sizeof(int)*sets->size_maze);
-	maze_print->ptr_arr = (int*)malloc(sizeof(int)*(2*maze_print->size_maze));
+	maze_print->ptr_arr = (int*)malloc(sizeof(int)*maze_print->size_maze);
 
-	for(i = 0; i < sets->size_maze; i++)
+	for(i = 1; i < sets->size_maze; i++)
 		sets->ptr_arr[i] = 0;
 
-	for(i = 0; i < 2*maze_print->size_maze; i++)
+	for(i = 1; i < maze_print->size_maze; i++)
 		maze_print->ptr_arr[i] = -1;	
 }
 
@@ -35,9 +36,17 @@ void Union(DisjointSets *sets, int i, int j) {
 	x = find(sets, i);
 	y = find(sets, j);
 
-	// cycle check
-	if(sets->ptr_arr[i] < 0 || sets->ptr_arr[j] < 0) return;
-	
+	if(sets->ptr_arr[y] < sets->ptr_arr[x])
+		sets->ptr_arr[x] = y;
+	else {
+		if(sets->ptr_arr[y] == sets->ptr_arr[x])
+			sets->ptr_arr[x]--;
+		sets->ptr_arr[y] = x;
+	}
+
+
+
+/*	
 	if(sets->ptr_arr[i] == 0 || sets->ptr_arr[j] == 0) {
 		if(sets->ptr_arr[i] == 0 && sets->ptr_arr[j] != 0)
 			sets->ptr_arr[i] = y;			
@@ -49,23 +58,31 @@ void Union(DisjointSets *sets, int i, int j) {
 		}
 	}
 	else if(sets->ptr_arr[j] != 0 && sets->ptr_arr[i] != 0)
-		sets->ptr_arr[
+		if(sets->ptr_arr[y] < sets->ptr_arr[x])
+			sets->ptr_arr[x] = y;
+		else if(sets->ptr_arr[x] == sets->ptr_arr[y]) {
+			sets->ptr_arr[x]--;
+			sets->ptr_arr[y] = x;
+		}
+		else if(sets->ptr_arr[y] > sets->ptr_arr[x])
+			sets->ptr_arr[y] = x;
+ */
 }
-
 
 void createMaze(DisjointSets *sets, DisjointSets *maze_print, int num) {
 	int i, j = 0;
 	int direction[4];
 	int random = 0; int random_direction = 0;
 	int maze_num = 0; int chosen_maze_num = 0;
-	srand((unsigned int)time(NULL));
 	while(1) {
-
-		random = rand()%(num*num); // 0~35
-		maze_num = random * 2;
+		// end condition
+		if( find(sets, 1) == find(sets, num*num) ) return;
+		srand((unsigned int)time(NULL));
+		random = rand()%(num*num)+1; // 1~36
+		maze_num = random * 2 - 1; // right below maze num
 	
 		//left up corner
-		if(random == 0) {
+		if(random == 1) {
 			direction[0] = maze_num;
 			direction[1] = maze_num+1;	
 
@@ -73,7 +90,7 @@ void createMaze(DisjointSets *sets, DisjointSets *maze_print, int num) {
 			chosen_maze_num = direction[random_direction];
 		}	
 		//left down corner
-		else if(random == num*(num-1)) {
+		else if(random == num*(num-1) + 1){ // random == 31
 			direction[0] = maze_num-2*num;
 			direction[1] = maze_num+1;
 			random_direction = rand() % 2; // 0~1
@@ -81,7 +98,7 @@ void createMaze(DisjointSets *sets, DisjointSets *maze_print, int num) {
 		}
 	
 		//right up corner
-		else if(random == num-1) {
+		else if(random == num) { // random == 6
 			direction[0] = maze_num-1;
 			direction[1] = maze_num;
 			random_direction = rand() % 2; // 0~1
@@ -89,7 +106,7 @@ void createMaze(DisjointSets *sets, DisjointSets *maze_print, int num) {
 		}
 		
 		//right down corner
-		else if(random == num*num-1) {
+		else if(random == num*num) { // random == 36
 			direction[0] = maze_num-2*num;
 			direction[1] = maze_num-1;
 			random_direction = rand() % 2; // 0~1
@@ -97,83 +114,113 @@ void createMaze(DisjointSets *sets, DisjointSets *maze_print, int num) {
 		}
 
 		// no east
-		else if(random % num == num-1) {
+		else if(random % num == 0) { // random == 12, 18, 24, 30
 			direction[0] = maze_num;
 			direction[1] = maze_num-1;
 			direction[2] = maze_num-2*num;
-			random_direction = rand() % 3; // 0~1
+			random_direction = rand() % 3; // 0~2
 			chosen_maze_num = direction[random_direction];
 		}
 	
 		// no west
-		else if(random % num == 0) {
+		else if(random % num == 1) { // random == 7, 13, 19, 25
 			direction[0] = maze_num;
 			direction[1] = maze_num+1;
 			direction[2] = maze_num-2*num;
-			random_direction = rand() % 3; // 0~1
+			random_direction = rand() % 3; // 0~2
 			chosen_maze_num = direction[random_direction];
 		}
 
 		// no south
-		else if(random / num == num-1) {
+		else if(random / num == num-1) { // random == 32, 33, 34, 35
 			direction[0] = maze_num-1;
 			direction[1] = maze_num+1;
 			direction[2] = maze_num-2*num;
-			random_direction = rand() % 3; // 0~1
+			random_direction = rand() % 3; // 0~2
 			chosen_maze_num = direction[random_direction];
 		}
 
 		// no north
-		else if(random / num == 0) {
+		else if(random / num == 0) { // random == 2, 3, 4, 5
 			direction[0] = maze_num;
 			direction[1] = maze_num-1;
 			direction[2] = maze_num+1;
-			random_direction = rand() % 3; // 0~1
+			random_direction = rand() % 3; // 0~2
+			chosen_maze_num = direction[random_direction];
+		}
+
+		// normal case
+		else {
+			direction[0] = maze_num;
+			direction[1] = maze_num-1;
+			direction[2] = maze_num+1;
+			direction[3] = maze_num-2*num;
+			random_direction = rand() % 4;
+
 			chosen_maze_num = direction[random_direction];
 		}
 
 	// cycle check and update
-	if(chosen_maze_num % 2 == 0) {
-//		if(sets->ptr_arr[chosen_maze_num/2] < 0 || sets->ptr_arr[(chosen_maze_num+2*num)/2] < 0) continue;	
+	if(chosen_maze_num % 2 == 0) { // if direction is right or left
 		
-		if(sets->ptr_arr[chosen_maze_num/2] != 0 && sets->ptr_arr[(chosen_maze_num+2*num)/2] != 0 && sets->ptr_arr[chosen_maze_num/2] == sets->ptr_arr[(chosen_maze_num+2*num)/2] != 0)  continue;
+		if(maze_print->ptr_arr[chosen_maze_num] == 0) continue; // two random vertex are already in same group
+
+
+		else if(find(sets, chosen_maze_num/2) == find(sets, (chosen_maze_num/2)+1)) continue;
 
 		else {
-			Union(sets, chosen_maze_num/2, (chosen_maze_num+2*num)/2);
+			Union(sets, chosen_maze_num/2, (chosen_maze_num/2)+1);
 			maze_print->ptr_arr[chosen_maze_num] = 0;
 		}
 	}
-	else {
-//		if(sets->ptr_arr[(chosen_maze_num-1)/2] < 0 || sets->ptr_arr[(chosen_maze_num+1)/2] < 0) continue;	
+	else { // if direction is up or down
 	
-		if(sets->ptr_arr[(chosen_maze_num-1)/2] != 0 && sets->ptr_arr[(chosen_maze_num+1)/2] != 0 && sets->ptr_arr[(chosen_maze_num-1)/2] == sets->ptr_arr[(chosen_maze_num+1)/2] != 0)  continue;
+//		if(sets->ptr_arr[(chosen_maze_num-1)/2] != 0 && sets->ptr_arr[(chosen_maze_num+1)/2] != 0 && find(sets, (chosen_maze_num-1)/2 == find(sets, (chosen_maze_num+1)/2))) continue;
+
+		if(maze_print->ptr_arr[chosen_maze_num] == 0) continue;
+
+		else if(find(sets, (chosen_maze_num+(2*num)+1)/2) == find(sets, (chosen_maze_num+1)/2)) continue;
+
 		else {
-			Union(sets, (chosen_maze_num-1)/2, (chosen_maze_num+1)/2);
+			Union(sets, (chosen_maze_num+(2*num)+1)/2, (chosen_maze_num+1)/2);
 			maze_print->ptr_arr[chosen_maze_num] = 0;
 		}
 	}
 
-	// end condition
-	if(	find(sets, 0) == find(sets, num*num-1)) return;
 	}
 }
 
-void printMaze(DisjointSets *sets, int num) {
+void printMaze(DisjointSets *maze_print, int num) {
 	int i = 0; int j = 0; int k = 0; int x = 0;
+/*	 _ _ _ _ _ _
+	|_|_|_|_|_|_|
+	|_|_|_|_|_|_|
+	|_|_|_|_|_|_|
+	|_|_|_|_|_|_|
+	|_|_|_|_|_|_|
+	|_|_|_|_|_|_|
 
-	for(i = 0; i < num*num; i++) {
-		printf("sets->ptr_arr[%d]", i);
-		printf("%d ", sets->ptr_arr[i]);
+*/
+
+	for(i = 0; i < num; i++)
+		printf(" _");
+	printf(" ");
+
+	printf("\n");
+ 
+	for(j = 0; j < num; j++) {
+		printf("|");
+		for(i = 1; i < 2*num+1; i++) {
+			if(i % 2 == 1)
+				(maze_print->ptr_arr[2*j*num+i] == -1) ? printf("_") : printf(" ");
+			else if(i % 2 == 0)
+				(maze_print->ptr_arr[2*j*num+i] == -1) ? printf("|") : printf(" ");
+		}
 		printf("\n");
 	}
-	
-	for(i = 0; i < 2*num*num; i++) {
-		printf("maze->ptr_arr[%d]", i);
-		printf("%d ", sets->ptr_arr[i]);
-		printf("\n");
-	}
+	printf("\n");
+
 }
-
 void freeMaze(DisjointSets *sets, DisjointSets *maze_print) {
 	free(sets->ptr_arr);
 	free(sets);
